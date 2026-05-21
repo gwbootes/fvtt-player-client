@@ -1,25 +1,50 @@
-# Continued Contributions
+# FVTT Player Client
 
-Well... no one seems to be updating this for v14 and above so, figured I'd do it?
+A desktop client for Foundry Virtual Tabletop, built on Electron. Lets players 
+connect to Foundry games without a browser, useful for anyone who has 
+compatibility issues with their browser of choice.
 
-# fvtt-player-client
+Originally created by [theripper93](https://github.com/theripper93/fvtt-player-client).
+Extended by [OmegaRogue](https://github.com/OmegaRogue/fvtt-player-client).
+Currently maintained by [Rattlesire](https://github.com/gwbootes).
 
-wiki https://wiki.theripper93.com/free/vtt-desktop-client
+---
 
-## Differences between this and theripper93's player client
+## What happened to the original?
 
-| Feature                                      | [theripper93](https://github.com/theripper93/fvtt-player-client) | omegarogue |
-|----------------------------------------------|:----------------------------------------------------------------:|:----------:|
-| Back to server select button in setup screen |                                ✔️                                |     ✔️     |
-| Back to server select button in login screen |                             ✔️    ️                              |     ✔️     |
-| Back to server select button in game         |                                ❌                                 |     ✔️     |
+Both theripper93's version and OmegaRogue's fork went quiet in mid-2024. 
+By Foundry v13/v14, the bundled Chromium version (122) was too old to run 
+Foundry properly, and the client would fail to load or throw browser compatibility 
+errors. This fork picks up where they left off.
+
+**v2.0.0** updates Electron from v29 to v42, bringing Chromium from 122 to 148. 
+Foundry v14 works again.
+
+---
+
+## Differences between forks
+
+| Feature | theripper93 | OmegaRogue | Rattlesire (this fork) |
+|---|:---:|:---:|:---:|
+| Back to server select (setup screen) | yes | yes | yes |
+| Back to server select (login screen) | yes | yes | yes |
+| Back to server select (in-game) | no | yes | yes |
+| Foundry v14 compatible | no | no | yes |
+
+---
+
+## Installation
+
+Download the latest installer from the 
+[Releases](https://github.com/gwbootes/fvtt-player-client/releases) page and run it.
+
+---
 
 ## Customization
 
 You can pre-configure and customize the client by editing the `config.json` file.
-From where the executable is located,
-you can find the `config.json` file by navigating to the `resources/app` folder.
-You can edit the file with any text editor.
+From where the executable is located, navigate to the `resources/app` folder.
+Open `config.json` with any text editor.
 
 Example config:
 
@@ -27,18 +52,21 @@ Example config:
 {
   "games": [
     {
-      "name": "This is the name of my game",
-      "url": "https://www.nintendo.com/games/detail/the-legend-of-zelda-breath-of-the-wild-switch"
+      "name": "My Game",
+      "url": "https://your-foundry-server.com"
     }
   ],
-  "background": "https://images2.alphacoders.com/123/123862.jpg",
+  "background": "https://example.com/background.jpg",
   "backgroundColor": "#000000",
   "textColor": "white",
   "accentColor": "green"
 }
 ```
 
-## Getting data from `localStorage` to put into `config.json`
+## Migrating settings from an older version
+
+If you had games saved in a previous version, run this in your browser console 
+while on the old client to export your config:
 
 ```js
 JSON.stringify({
@@ -46,3 +74,9 @@ JSON.stringify({
     games: JSON.parse(window.localStorage.getItem("gameList") || "[]")
 })
 ```
+
+Paste the result into your `config.json`.
+
+---
+
+wiki: https://wiki.theripper93.com/free/vtt-desktop-client

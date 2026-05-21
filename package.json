@@ -1,7 +1,7 @@
 {
   "name": "vtt-desktop-client",
   "packageManager": "yarn@1.22.19",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "license": "MIT",
   "description": "VTT Desktop Client",
   "main": ".vite/build/main.js",
@@ -16,6 +16,10 @@
       "name": "OmegaRogue",
       "email": "omegarogue@omegavoid.codes",
       "url": "https://omegavoid.codes"
+    },
+    {
+      "name": "Rattlesire",
+      "url": "https://github.com/gwbootes"
     }
   ],
   "devDependencies": {
@@ -31,7 +35,7 @@
     "@types/node": "^20.14.2",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
-    "electron": "^29.4.2",
+    "electron": "latest",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
