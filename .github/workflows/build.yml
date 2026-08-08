@@ -122,7 +122,11 @@ jobs:
             case "$f" in
               *.exe)   cp "$f" "dist/${NAME}-windows-${ARCH}-${VERSION}-setup.exe" ;;
               *.dmg)   cp "$f" "dist/${NAME}-macos-${ARCH}-${VERSION}.dmg" ;;
-              *.deb)   cp "$f" "dist/${NAME}_${VERSION}_${ARCH}.deb" ;;
+              # deb and rpm keep the name their maker gave them. Each ecosystem
+              # has its own architecture spelling (Debian says amd64, rpm says
+              # x86_64) and package tooling and users both expect it. Renaming
+              # these to a house style breaks that for no gain.
+              *.deb)   cp "$f" "dist/$base" ;;
               *.rpm)   cp "$f" "dist/$base" ;;
               *.nupkg) cp "$f" "dist/$base" ;;
               */RELEASES) cp "$f" "dist/RELEASES" ;;
