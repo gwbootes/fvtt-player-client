@@ -1,158 +1,151 @@
-#file: noinspection SpellCheckingInspection
 name: Build and Release
+
+# Fires when a release is PUBLISHED, not when it is created.
+# `created` never fires for draft releases, which is why every previous release
+# had to have its binaries uploaded by hand. If you draft a release, fill it in,
+# then hit Publish, `published` is the only event that reaches this workflow.
 on:
   release:
-    types:
-      - created
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build and attach binaries to (e.g. v2.0.1)"
+        required: true
+        type: string
+
+# gh release upload writes to the repo. Without this the upload 403s.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
 env:
-  node_version: 18
+  NODE_VERSION: "22"
+
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.node_version }}
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    # One platform failing must not stop the others from publishing. A Mac user
+    # should still get their download if the rpm packager has a bad day.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            platform: win32
+            arch: x64
+          - name: macOS (Apple Silicon)
+            os: macos-latest
+            platform: darwin
+            arch: arm64
+          - name: macOS (Intel)
+            os: macos-latest
+            platform: darwin
+            arch: x64
+          - name: Linux x64
+            os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - name: Linux arm64
+            os: ubuntu-latest
+            platform: linux
+            arch: arm64
 
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-#      - name: install maker-flatpak dependencies
-#        run: |
-#          sudo apt-get install flatpak -y
-#          sudo apt-get install flatpak-builder -y
-#          sudo apt-get install elfutils -y
-#          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-#          sudo flatpak install flathub org.freedesktop.Platform/x86_64/19.08 org.freedesktop.Sdk/x86_64/19.08 org.electronjs.Electron2.BaseApp/x86_64/stable -y
-
-      - name: Install dependencies
-        run: |
-          yarn
-          yarn version --no-git-tag-version --new-version ${{ github.event.release.tag_name }}
-
-      - name: Build for Linux
-        run: yarn make --platform linux
-
-
-      - name: Rename output files
-        run: |
-          tag=${{ github.event.release.tag_name }}
-          mv out/make/deb/x64/vtt-desktop-client_${tag//-/\~}_amd64.deb ./vtt-desktop-client_${{ github.event.release.tag_name }}_amd64.deb
-          mv out/make/rpm/x64/vtt-desktop-client-${tag//-/.}-1.x86_64.rpm ./vtt-desktop-client-${{ github.event.release.tag_name }}-1.x86_64.rpm
-          mv out/make/zip/linux/x64/vtt-desktop-client-linux-x64-${{ github.event.release.tag_name }}.zip ./vtt-desktop-client-linux-x64-${{ github.event.release.tag_name }}.zip
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: linux-outputs
-          path: |
-            vtt-desktop-client_${{ github.event.release.tag_name }}_amd64.deb
-            vtt-desktop-client-${{ github.event.release.tag_name }}-1.x86_64.rpm
-            vtt-desktop-client-linux-x64-${{ github.event.release.tag_name }}.zip
-
-#      - name: Upload to Flathub
-#        uses: flatpak/flatpak-github-actions/flat-manager@v4
-#        with:
-#          repository: elementary
-#          flat-manager-url: https://flatpak-api.elementary.io
-#          token: some_very_hidden_token
-#          end-of-life: "The application has been renamed to..."
-#          end-of-life-rebase: "org.zbrown.Palette"
-
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.node_version }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # Resolve the tag once, strip the leading "v" for the package version.
+      # A tag of v2.0.1 must produce a package version of 2.0.1 or npm rejects it.
+      - name: Resolve version
+        shell: bash
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          if [ -z "$TAG" ]; then echo "::error::No tag resolved"; exit 1; fi
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+          echo "Building $TAG (package version ${TAG#v})"
+
+      # maker-rpm needs rpmbuild and maker-deb needs fakeroot. Neither ships on
+      # the ubuntu runner image, and forge reports their absence as a build
+      # failure rather than a skip.
+      - name: Install Linux packaging tools
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm fakeroot dpkg
 
       - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # npm pkg set instead of `yarn version`, which errors out when the new
+      # version matches the current one. Re-running a release must be harmless.
+      - name: Stamp version
+        shell: bash
+        run: npm pkg set version="$VERSION"
+
+      - name: Build
+        shell: bash
+        run: yarn make --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
+
+      # Collect by extension rather than by exact path. The old workflow used
+      # hardcoded `mv` paths, so any change in how forge names its output killed
+      # the job. Globbing survives that.
+      - name: Collect artifacts
+        shell: bash
         run: |
-          yarn
-          yarn version --no-git-tag-version --new-version ${{ github.event.release.tag_name }}
+          set -euo pipefail
+          shopt -s nullglob globstar
+          mkdir -p dist
+          NAME="vtt-desktop-client"
+          ARCH="${{ matrix.arch }}"
+          found=0
+          for f in out/make/**/*; do
+            [ -f "$f" ] || continue
+            base="$(basename "$f")"
+            case "$f" in
+              *.exe)   cp "$f" "dist/${NAME}-windows-${ARCH}-${VERSION}-setup.exe" ;;
+              *.dmg)   cp "$f" "dist/${NAME}-macos-${ARCH}-${VERSION}.dmg" ;;
+              *.deb)   cp "$f" "dist/${NAME}_${VERSION}_${ARCH}.deb" ;;
+              *.rpm)   cp "$f" "dist/$base" ;;
+              *.nupkg) cp "$f" "dist/$base" ;;
+              */RELEASES) cp "$f" "dist/RELEASES" ;;
+              *.zip)
+                case "${{ matrix.platform }}" in
+                  win32)  cp "$f" "dist/${NAME}-windows-${ARCH}-portable-${VERSION}.zip" ;;
+                  darwin) cp "$f" "dist/${NAME}-macos-${ARCH}-${VERSION}.zip" ;;
+                  linux)  cp "$f" "dist/${NAME}-linux-${ARCH}-${VERSION}.zip" ;;
+                esac
+                ;;
+              *) continue ;;
+            esac
+            found=$((found + 1))
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error::forge produced no recognisable artifacts"
+            find out/make -type f || true
+            exit 1
+          fi
+          echo "Collected $found artifact(s):"
+          ls -lh dist/
 
-      - name: Build for macOS
-        run: yarn make --platform darwin
-
-      - name: Rename output files
-        run: |
-          mv out/make/zip/darwin/arm64/vtt-desktop-client-darwin-arm64-${{ github.event.release.tag_name }}.zip ./vtt-desktop-client-macos-arm64-${{ github.event.release.tag_name }}.zip
-          mv out/make/vtt-desktop-client-${{ github.event.release.tag_name }}-arm64.dmg ./vtt-desktop-client-${{ github.event.release.tag_name }}-x64.dmg
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: macos-outputs
-          path: |
-            vtt-desktop-client-macos-arm64-${{ github.event.release.tag_name }}.zip
-            vtt-desktop-client-${{ github.event.release.tag_name }}-arm64.dmg
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.node_version }}
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          yarn
-          yarn version --no-git-tag-version --new-version ${{ github.event.release.tag_name }}
-
-      - name: Build for Windows
-        run: yarn make --platform win32
-
-      - name: Rename output files
-        run: |
-          Move-Item -Path "out\make\squirrel.windows\x64\vtt-desktop-client-${{ github.event.release.tag_name }} Setup.exe" -Destination ".\vtt-desktop-client-windows-x64-${{ github.event.release.tag_name }}-setup.exe"
-          Move-Item -Path "out\make\zip\win32\x64\vtt-desktop-client-win32-x64-${{ github.event.release.tag_name }}.zip" -Destination ".\vtt-desktop-client-windows-x64-portable-${{ github.event.release.tag_name }}.zip"
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: windows-outputs
-          path: |
-            vtt-desktop-client-windows-x64-${{ github.event.release.tag_name }}-setup.exe
-            vtt-desktop-client-windows-x64-portable-${{ github.event.release.tag_name }}.zip
-  publish:
-    needs:
-      - build-linux
-      - build-macos
-      - build-windows
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download linux production artifacts for publication
-        uses: actions/download-artifact@v2
-        with:
-          name: linux-outputs
-          path: linux-outputs
-
-      - name: Download windows production artifacts for publication
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-outputs
-          path: windows-outputs
-
-      - name: Download macos production artifacts for publication
-        uses: actions/download-artifact@v2
-        with:
-          name: macos-outputs
-          path: macos-outputs
-
-      - name: Create release
-        id: create_version_release
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          name: ${{ github.event.release.name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "./linux-outputs/*, ./windows-outputs/*, ./macos-outputs/*"
-          body: ${{ github.event.release.body }}
+      # Straight to the release. No upload-artifact/download-artifact round trip
+      # and no separate publish job: the v2 artifact actions the old workflow
+      # used were retired in 2024 and hard-fail, and gh is preinstalled on every
+      # runner, so this has nothing left in it that can rot.
+      - name: Upload to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG" dist/* --clobber
