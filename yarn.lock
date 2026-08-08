@@ -2270,7 +2270,7 @@ electron-winstaller@^5.3.0:
   optionalDependencies:
     "@electron/windows-sign" "^1.1.2"
 
-electron@latest:
+electron@42.2.0:
   version "42.2.0"
   resolved "https://registry.yarnpkg.com/electron/-/electron-42.2.0.tgz#513ac2d86c2a3217c17d25f24809bc46d470e7c2"
   integrity sha512-b2Tc7sIKiZEl0tBVwFM5GJ+FT5KYhmy9QJHjx8BGVZPVW2SctXWEvrE959ElB56qw7H05dBkhlikDA1DmpaAMw==
