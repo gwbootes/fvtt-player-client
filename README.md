@@ -35,8 +35,80 @@ Foundry v14 works again.
 
 ## Installation
 
-Download the latest installer from the 
-[Releases](https://github.com/gwbootes/fvtt-player-client/releases) page and run it.
+Go to the [Releases](https://github.com/gwbootes/fvtt-player-client/releases)
+page. Download the one file that matches your computer.
+
+### Which file do I want?
+
+| Your computer | The file to get |
+|---|---|
+| Windows | the one ending in `setup.exe` |
+| Mac, newer (M1, M2, M3, M4) | the one with `macos-arm64` in the name |
+| Mac, older (Intel) | the one with `macos-x64` in the name |
+| Ubuntu, Mint, or Debian | the one ending in `.deb` |
+| Fedora, RHEL, or openSUSE | the one ending in `.rpm` |
+| Any other Linux | the one with `linux-x64` in the name |
+
+Not sure which Mac you have? Click the Apple menu. Click About This Mac. Look
+at the line that says Chip. If it starts with "Apple", get the arm64 file.
+
+Using a Raspberry Pi or an ARM Chromebook? Get the same kind of file, but pick
+the one with `arm64` in the name.
+
+### Windows
+
+Run the `setup.exe` file. That's it.
+
+There is also a `portable` zip. Use that one if you don't want to install
+anything. Unzip it and run the app from the folder.
+
+### Mac
+
+Open the `.dmg` file. Drag the app into your Applications folder.
+
+**The first time you open it, your Mac will block it.** It may say the app is
+damaged. It may say it's from an unknown developer.
+
+The app is not damaged. Apple charges $99 a year to put their stamp of approval
+on an app. This project doesn't pay it. So every Mac shows this warning.
+
+Here's how to open it. You only have to do this once.
+
+1. Double-click the app. Let it fail.
+2. Open System Settings.
+3. Click Privacy & Security.
+4. Scroll to the bottom. You'll see a line about the app being blocked.
+5. Click **Open Anyway**.
+
+After that it opens like any other app.
+
+### Linux
+
+For Ubuntu, Mint, or Debian, open a terminal in your Downloads folder and run:
+
+```sh
+sudo apt install ./vtt-desktop-client_2.0.0_amd64.deb
+```
+
+For Fedora, RHEL, or openSUSE:
+
+```sh
+sudo dnf install ./vtt-desktop-client-2.0.0-1.x86_64.rpm
+```
+
+If you got the zip instead, unzip it anywhere and run `./vtt-desktop-client`.
+
+Some systems will close the app right away and print an error about a sandbox.
+If that happens, open a terminal in the app's folder and run these two lines:
+
+```sh
+sudo chown root:root chrome-sandbox
+sudo chmod 4755 chrome-sandbox
+```
+
+Then open the app again.
+
+The `.deb` and `.rpm` files do that step for you. Use one of those if you can.
 
 ---
 
