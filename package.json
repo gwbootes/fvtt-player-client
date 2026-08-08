@@ -35,7 +35,7 @@
     "@types/node": "^20.14.2",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
-    "electron": "latest",
+    "electron": "42.2.0",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
@@ -48,11 +48,16 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "build": "electron-forge make",
-    "make:linux": "electron-forge make --platform linux",
-    "make:windows": "electron-forge make --platform win32",
-    "make:macos": "electron-forge make --platform darwin",
+    "make:linux": "electron-forge make --platform linux --arch x64",
+    "make:linux-arm64": "electron-forge make --platform linux --arch arm64",
+    "make:windows": "electron-forge make --platform win32 --arch x64",
+    "make:macos": "electron-forge make --platform darwin --arch arm64",
+    "make:macos-intel": "electron-forge make --platform darwin --arch x64",
     "lint": "eslint --ext .ts,.tsx .",
     "make:linuxpkg": "electron-forge make --platform linux --targets '@electron-forge/maker-zip'"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "electron-squirrel-startup": "latest"
