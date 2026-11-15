@@ -17,8 +17,12 @@ By Foundry v13/v14, the bundled Chromium version (122) was too old to run
 Foundry properly, and the client would fail to load or throw browser compatibility 
 errors. This fork picks up where they left off.
 
-**v2.0.0** updates Electron from v29 to v42, bringing Chromium from 122 to 148. 
-Foundry v14 works again.
+**v2.1.0** updates Electron from v42 to v45, bringing Chromium from 148 to 156.
+The client now tells Foundry it is plain Chrome. Older versions left a stray
+version number in that line, which a server can read as an outdated desktop app.
+
+**v2.0.0** updated Electron from v29 to v42, bringing Chromium from 122 to 148.
+Foundry v14 worked again.
 
 ---
 
@@ -87,13 +91,13 @@ After that it opens like any other app.
 For Ubuntu, Mint, or Debian, open a terminal in your Downloads folder and run:
 
 ```sh
-sudo apt install ./vtt-desktop-client_2.0.0_amd64.deb
+sudo apt install ./vtt-desktop-client_2.1.0_amd64.deb
 ```
 
 For Fedora, RHEL, or openSUSE:
 
 ```sh
-sudo dnf install ./vtt-desktop-client-2.0.0-1.x86_64.rpm
+sudo dnf install ./vtt-desktop-client-2.1.0-1.x86_64.rpm
 ```
 
 If you got the zip instead, unzip it anywhere and run `./vtt-desktop-client`.

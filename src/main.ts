@@ -4,6 +4,11 @@ import {app, BrowserWindow, ipcMain, safeStorage, session} from 'electron';
 import path from 'path';
 import fs from 'fs';
 
+// Foundry reads an "Electron/x" token as an outdated Foundry desktop app. The app's own
+// "vtt-desktop-client/x" token goes too, which leaves a plain Chrome user agent.
+const CHROME_UA = app.userAgentFallback.replace(/\s+(Electron|vtt-desktop-client)\/\S+/gi, "");
+app.userAgentFallback = CHROME_UA;
+
 if (require('electron-squirrel-startup')) app.quit();
 
 /* Remove the comment (//) from the line below to ignore certificate errors (useful for self-signed certificates) */
@@ -68,7 +73,7 @@ function createWindow(): BrowserWindow {
     });
 
     // Fix Popouts
-    window.webContents.setUserAgent(window.webContents.getUserAgent().replace("Electron", ""));
+    window.webContents.setUserAgent(CHROME_UA);
     window.webContents.on('did-start-loading', () => {
         window.setTitle(window.webContents.getTitle() + ' * Loading ....');
         window.setProgressBar(2, {mode: 'indeterminate'}) // second parameter optional

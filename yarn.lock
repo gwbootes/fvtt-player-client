@@ -317,6 +317,11 @@
     xterm-addon-fit "^0.5.0"
     xterm-addon-search "^0.8.0"
 
+"@electron-internal/extract-zip@^1.0.1":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@electron-internal/extract-zip/-/extract-zip-1.0.8.tgz#86724f7fd5a043b05f6bc9553b19ae5e5cdd53b2"
+  integrity sha512-8iajeLFbzNwM0m3AsQZSZgYREWglAImyGvvFSWU34FgMW8sHlzdwj9QKvv9dgN7jMP591EFUF/sLOC3Jl9YIjQ==
+
 "@electron/asar@^3.2.1", "@electron/asar@^3.2.7":
   version "3.2.10"
   resolved "https://registry.yarnpkg.com/@electron/asar/-/asar-3.2.10.tgz#615cf346b734b23cafa4e0603551010bd0e50aa8"
@@ -2270,14 +2275,14 @@ electron-winstaller@^5.3.0:
   optionalDependencies:
     "@electron/windows-sign" "^1.1.2"
 
-electron@42.2.0:
-  version "42.2.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-42.2.0.tgz#513ac2d86c2a3217c17d25f24809bc46d470e7c2"
-  integrity sha512-b2Tc7sIKiZEl0tBVwFM5GJ+FT5KYhmy9QJHjx8BGVZPVW2SctXWEvrE959ElB56qw7H05dBkhlikDA1DmpaAMw==
+electron@45.3.2:
+  version "45.3.2"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-45.3.2.tgz#323ed1e98f4a60692be7f59563f8dde432cf64ed"
+  integrity sha512-bPO0MMvJCdKdPfXgd3ES8zupu+ocr6XmSuRGwyZazTiigTz8jE7rwukSkck0iomS6UZeFuCwzu0uanMD/D34uw==
   dependencies:
+    "@electron-internal/extract-zip" "^1.0.1"
     "@electron/get" "^5.0.0"
     "@types/node" "^24.9.0"
-    extract-zip "^2.0.1"
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -2721,7 +2726,7 @@ express@^4.17.1:
     utils-merge "1.0.1"
     vary "~1.1.2"
 
-extract-zip@^2.0.0, extract-zip@^2.0.1:
+extract-zip@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/extract-zip/-/extract-zip-2.0.1.tgz#663dca56fe46df890d5f131ef4a06d22bb8ba13a"
   integrity sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==
